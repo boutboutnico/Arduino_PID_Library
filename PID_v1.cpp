@@ -27,13 +27,13 @@ PID::PID(
 	// Default output limit corresponds to the arduino pwm limits
 	PID::SetOutputLimits(0, 255);
 
-	// Default Controller Sample Time is 0.1 seconds
-	ui16_sample_time = 100;
+//	// Default Controller Sample Time is 0.1 seconds
+//	ui16_sample_time = 100;
 
 	PID::SetControllerDirection(i_b_direction);
 	PID::SetTunings(i_f_Kp, i_f_Ki, i_f_Kd);
 
-	if((millis() + ui16_sample_time) > ui16_sample_time) lastTime = millis() - ui16_sample_time;
+//	if((millis() + ui16_sample_time) > ui16_sample_time) lastTime = millis() - ui16_sample_time;
 }
 
 /**
@@ -46,32 +46,41 @@ bool PID::Compute()
 {
 	if(!b_auto_mode) return false;
 
-	uint32_t now = millis();
-	uint32_t timeChange = (now - lastTime);
-	if(timeChange >= ui16_sample_time)
-	{
-		/*Compute all the working error variables*/
-		float input = rf_input;
-		float error = rf_consigne - input;
+//	uint32_t now = millis();
+//	uint32_t timeChange = (now - lastTime);
+//	if(timeChange >= ui16_sample_time)
+//	{
 
-		ITerm += (f_ki * error);
-		if(ITerm > f_out_max) ITerm = f_out_max;
-		else if(ITerm < f_out_min) ITerm = f_out_min;
-		float dInput = (input - lastInput);
+	/*Compute all the working error variables*/
+	float f_input = rf_input;
+	float f_error = rf_consigne - f_input;
 
-		/*Compute PID Output*/
-		float output = f_kp * error + ITerm - f_kd * dInput;
+	// Integrate error
+	f_ITerm += (f_ki * f_error);
+	if(f_ITerm > f_out_max) f_ITerm = f_out_max;
+	else if(f_ITerm < f_out_min) f_ITerm = f_out_min;
 
-		if(output > f_out_max) output = f_out_max;
-		else if(output < f_out_min) output = f_out_min;
-		rf_command = output;
+	// Derivate erro
+	float dInput = (f_input - lastInput);
 
-		/*Remember some variables for next time*/
-		lastInput = input;
-		lastTime = now;
-		return true;
-	}
-	else return false;
+	// Compute PID Output
+	float output = f_kp * f_error + f_ITerm - f_kd * dInput;
+
+	// Check for min/max output
+	if(output > f_out_max) output = f_out_max;
+	else if(output < f_out_min) output = f_out_min;
+	rf_command = output;
+
+	// Release motor control
+	if(rf_consigne == 0 && f_input == 0) rf_command = 0;
+
+	// Remember some variables for next time
+	lastInput = f_input;
+//	lastTime = now;
+	return true;
+
+//	}
+//	else return false;
 }
 
 /**
@@ -87,10 +96,10 @@ void PID::SetTunings(float i_f_Kp, float i_f_Ki, float i_f_Kd)
 	dispKi = i_f_Ki;
 	dispKd = i_f_Kd;
 
-	float f_sample_timeInSec = ((float) ui16_sample_time) / 1000.0;
+//	float f_sample_timeInSec = ((float) ui16_sample_time) / 1000.0;
 	f_kp = i_f_Kp;
-	f_ki = i_f_Ki * f_sample_timeInSec;
-	f_kd = i_f_Kd / f_sample_timeInSec;
+	f_ki = i_f_Ki;// * f_sample_timeInSec;
+	f_kd = i_f_Kd;// / f_sample_timeInSec;
 
 	if(b_direction == REVERSE)
 	{
@@ -100,19 +109,20 @@ void PID::SetTunings(float i_f_Kp, float i_f_Ki, float i_f_Kd)
 	}
 }
 
-/**
- * @brief	sets the period, in Milliseconds, at which the calculation is performed
- */
-void PID::SetSampleTime(uint16_t i_ui16_sample_time)
-{
-	if(i_ui16_sample_time > 0)
-	{
-		float f_ratio = (float) i_ui16_sample_time / (float) ui16_sample_time;
-		f_ki *= f_ratio;
-		f_kd /= f_ratio;
-		ui16_sample_time = i_ui16_sample_time;
-	}
-}
+///**
+// * @brief	sets the period, in Milliseconds, at which the calculation is performed
+// */
+//void PID::SetSampleTime(uint16_t i_ui16_sample_time)
+//{
+////	if(i_ui16_sample_time > 0)
+////	{
+////		float f_ratio = (float) i_ui16_sample_time / (float) ui16_sample_time;
+////		f_ki *= f_ratio;
+////		f_kd /= f_ratio;
+////		ui16_sample_time = i_ui16_sample_time;
+////	}
+////	ui16_sample_time = i_ui16_sample_time;
+//}
 
 /**
  * @brief	This function will be used far more often than SetInputLimits.  while
@@ -134,8 +144,8 @@ void PID::SetOutputLimits(float i_f_min, float i_f_max)
 		if(rf_command > f_out_max) rf_command = f_out_max;
 		else if(rf_command < f_out_min) rf_command = f_out_min;
 
-		if(ITerm > f_out_max) ITerm = f_out_max;
-		else if(ITerm < f_out_min) ITerm = f_out_min;
+		if(f_ITerm > f_out_max) f_ITerm = f_out_max;
+		else if(f_ITerm < f_out_min) f_ITerm = f_out_min;
 	}
 }
 
@@ -161,11 +171,11 @@ void PID::SetMode(bool i_b_mode)
  */
 void PID::Initialize()
 {
-	ITerm = rf_command;
+	f_ITerm = rf_command;
 	lastInput = rf_input;
 
-	if(ITerm > f_out_max) ITerm = f_out_max;
-	else if(ITerm < f_out_min) ITerm = f_out_min;
+	if(f_ITerm > f_out_max) f_ITerm = f_out_max;
+	else if(f_ITerm < f_out_min) f_ITerm = f_out_min;
 }
 
 /**

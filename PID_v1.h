@@ -26,18 +26,24 @@ public:
 	    float i_f_Kd,
 	    bool i_b_direction = DIRECT);
 
-	// * sets PID to either Manual (0) or Auto (non-0)
+	/**
+	 * @brief	sets PID to either Manual (0) or Auto (non-0)
+	 */
 	void SetMode(bool i_b_mode);
 
-	// * performs the PID calculation.  it should be
-	//   called every time loop() cycles. ON/OFF and
-	//   calculation frequency can be set using SetMode
-	//   SetSampleTime respectively
+	/**
+	 * @brief	performs the PID calculation.  it should be
+	 * 			called every time loop() cycles. ON/OFF and
+	 * 			calculation frequency can be set using SetMode
+	 * 			SetSampleTime respectively
+	 */
 	bool Compute();
 
-	//clamps the output to a specific range. 0-255 by default, but
-	//it's likely the user will want to change this depending on
-	//the application
+	/**
+	 * @brief	clamps the output to a specific range. 0-255 by default, but
+	 *			it's likely the user will want to change this depending on
+	 *			the application
+	 */
 	void SetOutputLimits(float i_f_min, float i_f_max);
 
 	/**
@@ -56,9 +62,9 @@ public:
 	//   once it is set in the constructor.
 	void SetControllerDirection(bool i_b_direction);
 
-	// * sets the frequency, in Milliseconds, with which
-	//   the PID calculation is performed.  default is 100
-	void SetSampleTime(uint16_t i_ui16_sample_time);
+//	// * sets the frequency, in Milliseconds, with which
+//	//   the PID calculation is performed.  default is 100
+//	void SetSampleTime(uint16_t i_ui16_sample_time);
 
 	//Display functions ****************************************************************
 	float GetKp();						  // These functions query the pid for interal values.
@@ -86,7 +92,7 @@ private:
 
 	boolean b_auto_mode;
 
-	uint16_t ui16_sample_time;
+//	uint16_t ui16_sample_time;
 
 	float dispKp;				// * we'll hold on to the tuning parameters in user-entered
 	float dispKi;				//   format for display purposes
@@ -95,7 +101,7 @@ private:
 	bool b_direction;
 
 	unsigned long lastTime;
-	float ITerm, lastInput;
+	float f_ITerm, lastInput;
 
 	float f_out_min, f_out_max;
 
