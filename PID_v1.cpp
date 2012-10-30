@@ -27,13 +27,8 @@ PID::PID(
 	// Default output limit corresponds to the arduino pwm limits
 	PID::SetOutputLimits(0, 255);
 
-//	// Default Controller Sample Time is 0.1 seconds
-//	ui16_sample_time = 100;
-
 	PID::SetControllerDirection(i_b_direction);
 	PID::SetTunings(i_f_Kp, i_f_Ki, i_f_Kd);
-
-//	if((millis() + ui16_sample_time) > ui16_sample_time) lastTime = millis() - ui16_sample_time;
 }
 
 /**
@@ -46,11 +41,6 @@ bool PID::Compute()
 {
 	if(!b_auto_mode) return false;
 
-//	uint32_t now = millis();
-//	uint32_t timeChange = (now - lastTime);
-//	if(timeChange >= ui16_sample_time)
-//	{
-
 	/*Compute all the working error variables*/
 	float f_input = rf_input;
 	float f_error = rf_consigne - f_input;
@@ -61,7 +51,7 @@ bool PID::Compute()
 	else if(f_ITerm < f_out_min) f_ITerm = f_out_min;
 
 	// Derivate erro
-	float dInput = (f_input - lastInput);
+	float dInput = (f_input - f_last_input);
 
 	// Compute PID Output
 	float output = f_kp * f_error + f_ITerm - f_kd * dInput;
@@ -75,12 +65,8 @@ bool PID::Compute()
 	if(rf_consigne == 0 && f_input == 0) rf_command = 0;
 
 	// Remember some variables for next time
-	lastInput = f_input;
-//	lastTime = now;
+	f_last_input = f_input;
 	return true;
-
-//	}
-//	else return false;
 }
 
 /**
@@ -92,14 +78,9 @@ void PID::SetTunings(float i_f_Kp, float i_f_Ki, float i_f_Kd)
 {
 	if(i_f_Kp < 0 || i_f_Ki < 0 || i_f_Kd < 0) return;
 
-	dispKp = i_f_Kp;
-	dispKi = i_f_Ki;
-	dispKd = i_f_Kd;
-
-//	float f_sample_timeInSec = ((float) ui16_sample_time) / 1000.0;
 	f_kp = i_f_Kp;
-	f_ki = i_f_Ki;// * f_sample_timeInSec;
-	f_kd = i_f_Kd;// / f_sample_timeInSec;
+	f_ki = i_f_Ki;
+	f_kd = i_f_Kd;
 
 	if(b_direction == REVERSE)
 	{
@@ -108,21 +89,6 @@ void PID::SetTunings(float i_f_Kp, float i_f_Ki, float i_f_Kd)
 		f_kd = (0 - f_kd);
 	}
 }
-
-///**
-// * @brief	sets the period, in Milliseconds, at which the calculation is performed
-// */
-//void PID::SetSampleTime(uint16_t i_ui16_sample_time)
-//{
-////	if(i_ui16_sample_time > 0)
-////	{
-////		float f_ratio = (float) i_ui16_sample_time / (float) ui16_sample_time;
-////		f_ki *= f_ratio;
-////		f_kd /= f_ratio;
-////		ui16_sample_time = i_ui16_sample_time;
-////	}
-////	ui16_sample_time = i_ui16_sample_time;
-//}
 
 /**
  * @brief	This function will be used far more often than SetInputLimits.  while
@@ -172,7 +138,7 @@ void PID::SetMode(bool i_b_mode)
 void PID::Initialize()
 {
 	f_ITerm = rf_command;
-	lastInput = rf_input;
+	f_last_input = rf_input;
 
 	if(f_ITerm > f_out_max) f_ITerm = f_out_max;
 	else if(f_ITerm < f_out_min) f_ITerm = f_out_min;
@@ -202,15 +168,15 @@ void PID::SetControllerDirection(bool i_b_direction)
  ******************************************************************************/
 float PID::GetKp()
 {
-	return dispKp;
+	return f_kp;
 }
 float PID::GetKi()
 {
-	return dispKi;
+	return f_ki;
 }
 float PID::GetKd()
 {
-	return dispKd;
+	return f_kd;
 }
 int PID::GetMode()
 {

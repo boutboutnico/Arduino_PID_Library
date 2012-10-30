@@ -13,10 +13,10 @@ public:
 #define DIRECT  0
 #define REVERSE  1
 
-	//commonly used functions **************************************************************************
-
-	// Setpoint.  Initial tuning parameters are also set here
-	// constructor.  links the PID to the Input, Output, and
+	/**
+	 * @brief	Setpoint.  Initial tuning parameters are also set here
+	 * 			constructor.  links the PID to the Input, Output
+	 */
 	PID(
 	    float& i_rf_consigne,
 	    float& i_rf_input,
@@ -56,22 +56,19 @@ public:
 	 */
 	void SetTunings(float i_f_Kp, float i_f_Ki, float i_f_Kd);
 
-	// * Sets the Direction, or "Action" of the controller. DIRECT
-	//   means the output will increase when error is positive. REVERSE
-	//   means the opposite.  it's very unlikely that this will be needed
-	//   once it is set in the constructor.
+	/**
+	 * @brief	Sets the Direction, or "Action" of the controller. DIRECT
+	 *   		means the output will increase when error is positive. REVERSE
+	 *   		means the opposite.  it's very unlikely that this will be needed
+	 *   		once it is set in the constructor.
+	 */
 	void SetControllerDirection(bool i_b_direction);
 
-//	// * sets the frequency, in Milliseconds, with which
-//	//   the PID calculation is performed.  default is 100
-//	void SetSampleTime(uint16_t i_ui16_sample_time);
-
-	//Display functions ****************************************************************
-	float GetKp();						  // These functions query the pid for interal values.
-	float GetKi();						  //  they were created mainly for the pid front-end,
-	float GetKd();						  // where it's important to know what is actually
-	int GetMode();						  //  inside the PID.
-	int GetDirection();					  //
+	float GetKp();
+	float GetKi();
+	float GetKd();
+	int GetMode();
+	int GetDirection();
 
 private:
 	void Initialize();
@@ -92,16 +89,10 @@ private:
 
 	boolean b_auto_mode;
 
-//	uint16_t ui16_sample_time;
-
-	float dispKp;				// * we'll hold on to the tuning parameters in user-entered
-	float dispKi;				//   format for display purposes
-	float dispKd;				//
-
 	bool b_direction;
 
-	unsigned long lastTime;
-	float f_ITerm, lastInput;
+	float f_ITerm;
+	float f_last_input;
 
 	float f_out_min, f_out_max;
 
