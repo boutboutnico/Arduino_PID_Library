@@ -13,6 +13,8 @@ public:
 #define DIRECT  0
 #define REVERSE  1
 
+//#define __PID_FRONT_END
+
 	/**
 	 * @brief	Setpoint.  Initial tuning parameters are also set here
 	 * 			constructor.  links the PID to the Input, Output
@@ -70,6 +72,11 @@ public:
 	int GetMode();
 	int GetDirection();
 
+#ifdef __PID_FRONT_END
+	void SerialReceive();
+	void SerialSend();
+#endif
+
 private:
 	void Initialize();
 
@@ -95,6 +102,13 @@ private:
 	float f_last_input;
 
 	float f_out_min, f_out_max;
+
+	union
+	{                // This Data structure lets
+		byte asBytes[24];    // us take the byte array
+		float asFloat[6];    // sent from processing and
+	}                      // easily convert it to a
+	foo;                   // float array
 
 };
 #endif

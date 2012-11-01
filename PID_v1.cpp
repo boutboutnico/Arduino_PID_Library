@@ -22,12 +22,12 @@ PID::PID(
          bool i_b_direction)
 		: rf_consigne(i_rf_consigne), rf_input(i_rf_input), rf_command(o_rf_command)
 {
-	b_auto_mode = false;
+	b_auto_mode = AUTOMATIC;
+	b_direction = i_b_direction;
 
 	// Default output limit corresponds to the arduino pwm limits
 	PID::SetOutputLimits(0, 255);
 
-	PID::SetControllerDirection(i_b_direction);
 	PID::SetTunings(i_f_Kp, i_f_Ki, i_f_Kd);
 }
 
@@ -39,33 +39,58 @@ PID::PID(
  */
 bool PID::Compute()
 {
-	if(!b_auto_mode) return false;
+//	if(!b_auto_mode) return false;
+//
+//	/*Compute all the working error variables*/
+//	float f_input = rf_input;
+//	float f_error = rf_consigne - f_input;
+//
+//	// Integrate error
+//	f_ITerm += (f_ki * f_error);
+//	if(f_ITerm > f_out_max) f_ITerm = f_out_max;
+//	else if(f_ITerm < f_out_min) f_ITerm = f_out_min;
+//
+//	// Derivate erro
+//	float dInput = (f_input - f_last_input);
+//
+//	// Compute PID Output
+//	float output = f_kp * f_error + f_ITerm - f_kd * dInput;
+//
+//	// Check for min/max output
+//	if(output > f_out_max) output = f_out_max;
+//	else if(output < f_out_min) output = f_out_min;
+//	rf_command = output;
+//
+//	// Release motor control
+//	if(rf_consigne == 0 && f_input == 0) rf_command = 0;
+//
+//	// Remember some variables for next time
+//	f_last_input = f_input;
+//	return true;
 
-	/*Compute all the working error variables*/
-	float f_input = rf_input;
-	float f_error = rf_consigne - f_input;
+	static float f_sum_error = 0;
+	static float f_last_error = 0;
+
+	// Calcul error
+	float f_error = (rf_consigne - rf_input);
 
 	// Integrate error
-	f_ITerm += (f_ki * f_error);
-	if(f_ITerm > f_out_max) f_ITerm = f_out_max;
-	else if(f_ITerm < f_out_min) f_ITerm = f_out_min;
-
-	// Derivate erro
-	float dInput = (f_input - f_last_input);
+	f_sum_error += f_error;
 
 	// Compute PID Output
-	float output = f_kp * f_error + f_ITerm - f_kd * dInput;
+	float f_command = f_kp * f_error + f_ki * f_sum_error + f_kd * (f_error - f_last_error);
 
 	// Check for min/max output
-	if(output > f_out_max) output = f_out_max;
-	else if(output < f_out_min) output = f_out_min;
-	rf_command = output;
+	if(f_command > f_out_max) f_command = f_out_max;
+	else if(f_command < f_out_min) f_command = f_out_min;
+	rf_command = f_command;
 
 	// Release motor control
-	if(rf_consigne == 0 && f_input == 0) rf_command = 0;
+	if(rf_consigne == 0 && rf_input == 0) rf_command = 0;
 
-	// Remember some variables for next time
-	f_last_input = f_input;
+	// Remember values
+	f_last_error = f_error;
+
 	return true;
 }
 
@@ -186,4 +211,78 @@ int PID::GetDirection()
 {
 	return b_direction;
 }
+
+#ifdef __PID_FRONT_END
+void PID::SerialReceive()
+{
+
+	// read the bytes sent from Processing
+	int index = 0;
+	byte Auto_Man = -1;
+	byte Direct_Reverse = -1;
+	while(Serial.available() && index < 26)
+	{
+		if(index == 0) Auto_Man = Serial.read();
+		else if(index == 1) Direct_Reverse = Serial.read();
+		else foo.asBytes[index - 2] = Serial.read();
+		index++;
+	}
+
+	// if the information we got was in the correct format,
+	// read it into the system
+	if(index == 26 && (Auto_Man == 0 || Auto_Man == 1) && (Direct_Reverse == 0 || Direct_Reverse == 1))
+	{
+		rf_consigne = double(foo.asFloat[0]);
+		//Input=double(foo.asFloat[1]);       // * the user has the ability to send the
+		//   value of "Input"  in most cases (as
+		//   in this one) this is not needed.
+		if(Auto_Man == 0)              // * only change the output if we are in
+		{                      //   manual mode.  otherwise we'll get an
+			rf_command = double(foo.asFloat[2]); //   output blip, then the controller will
+		}                                     //   overwrite.
+
+		double p, i, d;              // * read in and set the controller tunings
+		p = double(foo.asFloat[3]);           //
+		i = double(foo.asFloat[4]);           //
+		d = double(foo.asFloat[5]);           //
+		SetTunings(p, i, d);            //
+
+		if(Auto_Man == 0) SetMode(MANUAL);          // * set the controller mode
+		else SetMode(AUTOMATIC);             //
+
+//		if(Direct_Reverse == 0) myPID.SetControllerDirection(DIRECT); // * set the controller Direction
+//		else myPID.SetControllerDirection(REVERSE);          //
+	}
+	Serial.flush();            // * clear any random data from the serial buffer
+}
+
+// unlike our tiny microprocessor, the processing ap
+// has no problem converting strings into floats, so
+// we can just send strings.  much easier than getting
+// floats from processing to here no?
+void PID::SerialSend()
+{
+	Serial.print("PID ");
+	Serial.print(rf_consigne);
+	Serial.print(" ");
+	Serial.print(rf_input);
+	Serial.print(" ");
+	Serial.print(rf_command);
+	Serial.print(" ");
+
+	Serial.print(f_kp);
+	Serial.print(" ");
+	Serial.print(f_ki);
+	Serial.print(" ");
+	Serial.print(f_kd);
+	Serial.print(" ");
+
+	if(GetMode() == AUTOMATIC) Serial.print("Automatic");
+	else Serial.print("Manual");
+	Serial.print(" ");
+
+	if(GetDirection() == DIRECT) Serial.println("Direct");
+	else Serial.println("Reverse");
+}
+#endif
 
