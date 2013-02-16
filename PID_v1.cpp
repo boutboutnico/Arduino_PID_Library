@@ -5,7 +5,6 @@
  * This Library is licensed under a GPLv3 License
  **********************************************************************************************/
 
-#include <Arduino.h>
 #include <PID_v1.h>
 
 /**
@@ -22,10 +21,13 @@ PID::PID(
          bool i_b_direction)
 		: rf_consigne(i_rf_consigne), rf_input(i_rf_input), rf_command(o_rf_command)
 {
-	b_auto_mode = AUTOMATIC;
+	b_auto_mode = PID_AUTOMATIC;
 	b_direction = i_b_direction;
 
-	// Default output limit corresponds to the arduino pwm limits
+	f_sum_error = 0;
+	f_last_error = 0;
+
+	// Default output limit corresponds to the Arduino PWM limits
 	PID::SetOutputLimits(0, 255);
 
 	PID::SetTunings(i_f_Kp, i_f_Ki, i_f_Kd);
@@ -68,10 +70,7 @@ bool PID::Compute()
 //	f_last_input = f_input;
 //	return true;
 
-	static float f_sum_error = 0;
-	static float f_last_error = 0;
-
-	// Calcul error
+// Calcul error
 	float f_error = (rf_consigne - rf_input);
 
 	// Integrate error
@@ -107,7 +106,7 @@ void PID::SetTunings(float i_f_Kp, float i_f_Ki, float i_f_Kd)
 	f_ki = i_f_Ki;
 	f_kd = i_f_Kd;
 
-	if(b_direction == REVERSE)
+	if(b_direction == PID_REVERSE)
 	{
 		f_kp = (0 - f_kp);
 		f_ki = (0 - f_ki);
@@ -147,7 +146,7 @@ void PID::SetOutputLimits(float i_f_min, float i_f_max)
  */
 void PID::SetMode(bool i_b_mode)
 {
-	bool b_new_auto = (i_b_mode == AUTOMATIC);
+	bool b_new_auto = (i_b_mode == PID_AUTOMATIC);
 
 	if(b_new_auto == !b_auto_mode)
 	{ /*we just went from manual to auto*/
@@ -186,11 +185,12 @@ void PID::SetControllerDirection(bool i_b_direction)
 	b_direction = i_b_direction;
 }
 
-/* Status Funcions*************************************************************
+/**
+ *  Status Funcions
  * Just because you set the Kp=-1 doesn't mean it actually happened.  these
  * functions query the internal state of the PID.  they're here for display 
  * purposes.  this are the functions the PID Front-end uses for example
- ******************************************************************************/
+ */
 float PID::GetKp()
 {
 	return f_kp;
@@ -205,7 +205,7 @@ float PID::GetKd()
 }
 int PID::GetMode()
 {
-	return b_auto_mode ? AUTOMATIC : MANUAL;
+	return b_auto_mode ? PID_AUTOMATIC : PID_MANUAL;
 }
 int PID::GetDirection()
 {
@@ -236,19 +236,19 @@ void PID::SerialReceive()
 		//Input=double(foo.asFloat[1]);       // * the user has the ability to send the
 		//   value of "Input"  in most cases (as
 		//   in this one) this is not needed.
-		if(Auto_Man == 0)              // * only change the output if we are in
+		if(Auto_Man == 0)// * only change the output if we are in
 		{                      //   manual mode.  otherwise we'll get an
-			rf_command = double(foo.asFloat[2]); //   output blip, then the controller will
+			rf_command = double(foo.asFloat[2]);//   output blip, then the controller will
 		}                                     //   overwrite.
 
-		double p, i, d;              // * read in and set the controller tunings
-		p = double(foo.asFloat[3]);           //
-		i = double(foo.asFloat[4]);           //
-		d = double(foo.asFloat[5]);           //
-		SetTunings(p, i, d);            //
+		double p, i, d;// * read in and set the controller tunings
+		p = double(foo.asFloat[3]);//
+		i = double(foo.asFloat[4]);//
+		d = double(foo.asFloat[5]);//
+		SetTunings(p, i, d);//
 
-		if(Auto_Man == 0) SetMode(MANUAL);          // * set the controller mode
-		else SetMode(AUTOMATIC);             //
+		if(Auto_Man == 0) SetMode(PID_MANUAL);// * set the controller mode
+		else SetMode(PID_AUTOMATIC);//
 
 //		if(Direct_Reverse == 0) myPID.SetControllerDirection(DIRECT); // * set the controller Direction
 //		else myPID.SetControllerDirection(REVERSE);          //
@@ -277,11 +277,11 @@ void PID::SerialSend()
 	Serial.print(f_kd);
 	Serial.print(" ");
 
-	if(GetMode() == AUTOMATIC) Serial.print("Automatic");
+	if(GetMode() == PID_AUTOMATIC) Serial.print("Automatic");
 	else Serial.print("Manual");
 	Serial.print(" ");
 
-	if(GetDirection() == DIRECT) Serial.println("Direct");
+	if(GetDirection() == PID_DIRECT) Serial.println("Direct");
 	else Serial.println("Reverse");
 }
 #endif

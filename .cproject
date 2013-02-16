@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?fileVersion 4.0.0?>
-
-<cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="cdt.managedbuild.config.gnu.cross.exe.debug.415770345">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.cross.exe.debug.415770345" moduleId="org.eclipse.cdt.core.settings" name="Debug">
@@ -30,8 +28,8 @@
 								<option id="gnu.cpp.compiler.option.optimization.level.1881833909" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.1828785441" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.759615271" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;D:\Robotique\Logiciel#\Arduino\arduino-1.0.1\libraries\Wire&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\Robotique\Logiciel#\Arduino\arduino-1.0.1\hardware\arduino\cores\arduino&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;D:\Robotique\Logiciel#\Arduino\arduino-1.0.2\libraries\Wire&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;D:\Robotique\Logiciel#\Arduino\arduino-1.0.2\hardware\arduino\cores\arduino&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1227795620" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>

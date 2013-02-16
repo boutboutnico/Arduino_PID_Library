@@ -2,19 +2,33 @@
 #define PID_v1_h
 #define LIBRARY_VERSION	1.0.0
 
+/*****************************************************************************
+ * INCLUDE
+ *****************************************************************************/
+#include <Arduino.h>
+
+/*****************************************************************************
+ * DEFINITION
+ *****************************************************************************/
+#define PID_AUTOMATIC	1
+#define PID_MANUAL	0
+#define PID_DIRECT  0
+#define PID_REVERSE  1
+
+#define __PID_FRONT_END
+
+/*****************************************************************************
+ * CLASS
+ *****************************************************************************/
+/**
+ * @class 	xx
+ * @brief	xx
+ * @author	boutboutnico
+ * @date	25 juil. 2012
+ */
 class PID
 {
-
 public:
-
-	//Constants used in some of the functions below
-#define AUTOMATIC	1
-#define MANUAL	0
-#define DIRECT  0
-#define REVERSE  1
-
-//#define __PID_FRONT_END
-
 	/**
 	 * @brief	Setpoint.  Initial tuning parameters are also set here
 	 * 			constructor.  links the PID to the Input, Output
@@ -26,7 +40,7 @@ public:
 	    float i_f_Kp,
 	    float i_f_Ki,
 	    float i_f_Kd,
-	    bool i_b_direction = DIRECT);
+	    bool i_b_direction = PID_DIRECT);
 
 	/**
 	 * @brief	sets PID to either Manual (0) or Auto (non-0)
@@ -94,6 +108,9 @@ private:
 	float f_ki;                  // * (I)ntegral Tuning Parameter
 	float f_kd;                  // * (D)erivative Tuning Parameter
 
+	float f_sum_error;
+	float f_last_error;
+
 	boolean b_auto_mode;
 
 	bool b_direction;
@@ -103,12 +120,14 @@ private:
 
 	float f_out_min, f_out_max;
 
+#ifdef __PID_FRONT_END
 	union
 	{                // This Data structure lets
-		byte asBytes[24];    // us take the byte array
-		float asFloat[6];    // sent from processing and
+		byte asBytes[24];// us take the byte array
+		float asFloat[6];// sent from processing and
 	}                      // easily convert it to a
-	foo;                   // float array
+	foo;// float array
+#endif
 
 };
 #endif
